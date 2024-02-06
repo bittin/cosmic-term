@@ -33,8 +33,6 @@ rev = "1b025ae"
 git = "https://github.com/pop-os/libcosmic.git"
 default-features = false
 features = ["tokio", "winit"]
-# TODO remove before merging
-branch = "update-iced-latest"
 
 [features]
 default = ["wgpu"]
