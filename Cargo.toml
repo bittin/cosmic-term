@@ -27,7 +27,6 @@ features = ["serde"]
 
 [dependencies.cosmic-text]
 git = "https://github.com/pop-os/cosmic-text.git"
-rev = "1b025ae"
 
 [dependencies.libcosmic]
 git = "https://github.com/pop-os/libcosmic.git"
@@ -41,7 +40,6 @@ wgpu = ["libcosmic/wgpu"]
 [patch.crates-io]
 # https://github.com/rust-lang/libc/pull/3512
 libc = { git = "https://gitlab.redox-os.org/redox-os/liblibc.git", branch = "redox_0.2.151" }
-wgpu = { git = "https://github.com/gfx-rs/wgpu", rev = "faed98b" }
 
 [profile.release-with-debug]
 inherits = "release"

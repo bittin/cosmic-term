@@ -947,7 +947,7 @@ dependencies = [
 [[package]]
 name = "cosmic-config"
 version = "0.1.0"
-source = "git+https://github.com/pop-os/libcosmic.git#045dca649a6d5f820670c1d0423c35c7e89e7ee6"
+source = "git+https://github.com/pop-os/libcosmic.git#356500a95af340a16e4baa4ec0e11f42a73a3b20"
 dependencies = [
  "atomicwrites",
  "cosmic-config-derive",
@@ -964,7 +964,7 @@ dependencies = [
 [[package]]
 name = "cosmic-config-derive"
 version = "0.1.0"
-source = "git+https://github.com/pop-os/libcosmic.git#045dca649a6d5f820670c1d0423c35c7e89e7ee6"
+source = "git+https://github.com/pop-os/libcosmic.git#356500a95af340a16e4baa4ec0e11f42a73a3b20"
 dependencies = [
  "quote",
  "syn 1.0.109",
@@ -995,7 +995,7 @@ dependencies = [
 [[package]]
 name = "cosmic-text"
 version = "0.10.0"
-source = "git+https://github.com/pop-os/cosmic-text.git?rev=1b025ae#1b025ae56e0122cff5798b9f54fc56d47a182d2b"
+source = "git+https://github.com/pop-os/cosmic-text.git#be471833c9ee563866f07593354a41dd40761a18"
 dependencies = [
  "bitflags 2.4.2",
  "fontdb",
@@ -1017,7 +1017,7 @@ dependencies = [
 [[package]]
 name = "cosmic-theme"
 version = "0.1.0"
-source = "git+https://github.com/pop-os/libcosmic.git#045dca649a6d5f820670c1d0423c35c7e89e7ee6"
+source = "git+https://github.com/pop-os/libcosmic.git#356500a95af340a16e4baa4ec0e11f42a73a3b20"
 dependencies = [
  "almost",
  "cosmic-config",
@@ -1131,7 +1131,7 @@ checksum = "96a6ac251f4a2aca6b3f91340350eab87ae57c3f127ffeb585e92bd336717991"
 [[package]]
 name = "d3d12"
 version = "0.19.0"
-source = "git+https://github.com/gfx-rs/wgpu?rev=faed98b#faed98b45cdc105df78b110e3fd6ca3eef36efc7"
+source = "git+https://github.com/gfx-rs/wgpu?rev=20fda69#20fda698341efbdc870b8027d6d49f5bf3f36109"
 dependencies = [
  "bitflags 2.4.2",
  "libloading 0.8.1",
@@ -1958,7 +1958,7 @@ dependencies = [
 [[package]]
 name = "glyphon"
 version = "0.5.0"
-source = "git+https://github.com/wash2/glyphon.git?tag=cosmic-0.5#b6d630e2151cddaa41cb0b10133c5bc3ee9dacc6"
+source = "git+https://github.com/pop-os/glyphon.git?tag=v0.5.0#1b0646ff8f74da92d3be704dfc2257d7f4d7eed8"
 dependencies = [
  "cosmic-text",
  "etagere",
@@ -2210,7 +2210,7 @@ dependencies = [
 [[package]]
 name = "iced"
 version = "0.12.0"
-source = "git+https://github.com/pop-os/libcosmic.git#045dca649a6d5f820670c1d0423c35c7e89e7ee6"
+source = "git+https://github.com/pop-os/libcosmic.git#356500a95af340a16e4baa4ec0e11f42a73a3b20"
 dependencies = [
  "iced_accessibility",
  "iced_core",
@@ -2225,7 +2225,7 @@ dependencies = [
 [[package]]
 name = "iced_accessibility"
 version = "0.1.0"
-source = "git+https://github.com/pop-os/libcosmic.git#045dca649a6d5f820670c1d0423c35c7e89e7ee6"
+source = "git+https://github.com/pop-os/libcosmic.git#356500a95af340a16e4baa4ec0e11f42a73a3b20"
 dependencies = [
  "accesskit",
  "accesskit_winit",
@@ -2234,7 +2234,7 @@ dependencies = [
 [[package]]
 name = "iced_core"
 version = "0.12.0"
-source = "git+https://github.com/pop-os/libcosmic.git#045dca649a6d5f820670c1d0423c35c7e89e7ee6"
+source = "git+https://github.com/pop-os/libcosmic.git#356500a95af340a16e4baa4ec0e11f42a73a3b20"
 dependencies = [
  "bitflags 1.3.2",
  "log",
@@ -2251,7 +2251,7 @@ dependencies = [
 [[package]]
 name = "iced_futures"
 version = "0.12.0"
-source = "git+https://github.com/pop-os/libcosmic.git#045dca649a6d5f820670c1d0423c35c7e89e7ee6"
+source = "git+https://github.com/pop-os/libcosmic.git#356500a95af340a16e4baa4ec0e11f42a73a3b20"
 dependencies = [
  "futures",
  "iced_core",
@@ -2264,7 +2264,7 @@ dependencies = [
 [[package]]
 name = "iced_graphics"
 version = "0.12.0"
-source = "git+https://github.com/pop-os/libcosmic.git#045dca649a6d5f820670c1d0423c35c7e89e7ee6"
+source = "git+https://github.com/pop-os/libcosmic.git#356500a95af340a16e4baa4ec0e11f42a73a3b20"
 dependencies = [
  "bitflags 1.3.2",
  "bytemuck",
@@ -2288,7 +2288,7 @@ dependencies = [
 [[package]]
 name = "iced_renderer"
 version = "0.12.0"
-source = "git+https://github.com/pop-os/libcosmic.git#045dca649a6d5f820670c1d0423c35c7e89e7ee6"
+source = "git+https://github.com/pop-os/libcosmic.git#356500a95af340a16e4baa4ec0e11f42a73a3b20"
 dependencies = [
  "iced_graphics",
  "iced_tiny_skia",
@@ -2300,7 +2300,7 @@ dependencies = [
 [[package]]
 name = "iced_runtime"
 version = "0.12.0"
-source = "git+https://github.com/pop-os/libcosmic.git#045dca649a6d5f820670c1d0423c35c7e89e7ee6"
+source = "git+https://github.com/pop-os/libcosmic.git#356500a95af340a16e4baa4ec0e11f42a73a3b20"
 dependencies = [
  "iced_core",
  "iced_futures",
@@ -2310,7 +2310,7 @@ dependencies = [
 [[package]]
 name = "iced_style"
 version = "0.12.0"
-source = "git+https://github.com/pop-os/libcosmic.git#045dca649a6d5f820670c1d0423c35c7e89e7ee6"
+source = "git+https://github.com/pop-os/libcosmic.git#356500a95af340a16e4baa4ec0e11f42a73a3b20"
 dependencies = [
  "iced_core",
  "once_cell",
@@ -2320,7 +2320,7 @@ dependencies = [
 [[package]]
 name = "iced_tiny_skia"
 version = "0.12.0"
-source = "git+https://github.com/pop-os/libcosmic.git#045dca649a6d5f820670c1d0423c35c7e89e7ee6"
+source = "git+https://github.com/pop-os/libcosmic.git#356500a95af340a16e4baa4ec0e11f42a73a3b20"
 dependencies = [
  "bytemuck",
  "cosmic-text",
@@ -2337,7 +2337,7 @@ dependencies = [
 [[package]]
 name = "iced_wgpu"
 version = "0.12.0"
-source = "git+https://github.com/pop-os/libcosmic.git#045dca649a6d5f820670c1d0423c35c7e89e7ee6"
+source = "git+https://github.com/pop-os/libcosmic.git#356500a95af340a16e4baa4ec0e11f42a73a3b20"
 dependencies = [
  "bitflags 1.3.2",
  "bytemuck",
@@ -2356,7 +2356,7 @@ dependencies = [
 [[package]]
 name = "iced_widget"
 version = "0.12.0"
-source = "git+https://github.com/pop-os/libcosmic.git#045dca649a6d5f820670c1d0423c35c7e89e7ee6"
+source = "git+https://github.com/pop-os/libcosmic.git#356500a95af340a16e4baa4ec0e11f42a73a3b20"
 dependencies = [
  "iced_renderer",
  "iced_runtime",
@@ -2370,7 +2370,7 @@ dependencies = [
 [[package]]
 name = "iced_winit"
 version = "0.12.0"
-source = "git+https://github.com/pop-os/libcosmic.git#045dca649a6d5f820670c1d0423c35c7e89e7ee6"
+source = "git+https://github.com/pop-os/libcosmic.git#356500a95af340a16e4baa4ec0e11f42a73a3b20"
 dependencies = [
  "iced_graphics",
  "iced_runtime",
@@ -2654,7 +2654,7 @@ source = "git+https://gitlab.redox-os.org/redox-os/liblibc.git?branch=redox_0.2.
 [[package]]
 name = "libcosmic"
 version = "0.1.0"
-source = "git+https://github.com/pop-os/libcosmic.git#045dca649a6d5f820670c1d0423c35c7e89e7ee6"
+source = "git+https://github.com/pop-os/libcosmic.git#356500a95af340a16e4baa4ec0e11f42a73a3b20"
 dependencies = [
  "apply",
  "ashpd",
@@ -2940,7 +2940,7 @@ checksum = "16cf681a23b4d0a43fc35024c176437f9dcd818db34e0f42ab456a0ee5ad497b"
 [[package]]
 name = "naga"
 version = "0.19.0"
-source = "git+https://github.com/gfx-rs/wgpu?rev=faed98b#faed98b45cdc105df78b110e3fd6ca3eef36efc7"
+source = "git+https://github.com/gfx-rs/wgpu?rev=20fda69#20fda698341efbdc870b8027d6d49f5bf3f36109"
 dependencies = [
  "arrayvec",
  "bit-set",
@@ -5074,7 +5074,7 @@ checksum = "53a85b86a771b1c87058196170769dd264f66c0782acf1ae6cc51bfd64b39082"
 [[package]]
 name = "wgpu"
 version = "0.19.0"
-source = "git+https://github.com/gfx-rs/wgpu?rev=faed98b#faed98b45cdc105df78b110e3fd6ca3eef36efc7"
+source = "git+https://github.com/gfx-rs/wgpu?rev=20fda69#20fda698341efbdc870b8027d6d49f5bf3f36109"
 dependencies = [
  "arrayvec",
  "cfg-if",
@@ -5098,7 +5098,7 @@ dependencies = [
 [[package]]
 name = "wgpu-core"
 version = "0.19.0"
-source = "git+https://github.com/gfx-rs/wgpu?rev=faed98b#faed98b45cdc105df78b110e3fd6ca3eef36efc7"
+source = "git+https://github.com/gfx-rs/wgpu?rev=20fda69#20fda698341efbdc870b8027d6d49f5bf3f36109"
 dependencies = [
  "arrayvec",
  "bit-vec",
@@ -5123,7 +5123,7 @@ dependencies = [
 [[package]]
 name = "wgpu-hal"
 version = "0.19.0"
-source = "git+https://github.com/gfx-rs/wgpu?rev=faed98b#faed98b45cdc105df78b110e3fd6ca3eef36efc7"
+source = "git+https://github.com/gfx-rs/wgpu?rev=20fda69#20fda698341efbdc870b8027d6d49f5bf3f36109"
 dependencies = [
  "android_system_properties",
  "arrayvec",
@@ -5166,7 +5166,7 @@ dependencies = [
 [[package]]
 name = "wgpu-types"
 version = "0.19.0"
-source = "git+https://github.com/gfx-rs/wgpu?rev=faed98b#faed98b45cdc105df78b110e3fd6ca3eef36efc7"
+source = "git+https://github.com/gfx-rs/wgpu?rev=20fda69#20fda698341efbdc870b8027d6d49f5bf3f36109"
 dependencies = [
  "bitflags 2.4.2",
  "js-sys",
