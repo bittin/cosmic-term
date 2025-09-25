@@ -3,34 +3,34 @@
 use alacritty_terminal::{
     index::{Column as TermColumn, Point as TermPoint, Side as TermSide},
     selection::{Selection, SelectionType},
-    term::{cell::Flags, TermMode},
+    term::{TermMode, cell::Flags},
     vte::ansi::{CursorShape, NamedColor},
 };
 use cosmic::widget::menu::key_bind::KeyBind;
 use cosmic::{
-    cosmic_theme::palette::{blend::Compose, WithAlpha},
+    Renderer,
+    cosmic_theme::palette::{WithAlpha, blend::Compose},
     iced::{
+        Color, Element, Length, Padding, Point, Rectangle, Size, Vector,
         advanced::graphics::text::Raw,
         event::{Event, Status},
         keyboard::{Event as KeyEvent, Key, Modifiers},
         mouse::{self, Button, Event as MouseEvent, ScrollDelta},
-        Color, Element, Length, Padding, Point, Rectangle, Size, Vector,
     },
     iced_core::{
+        Border, Shell,
         clipboard::Clipboard,
         keyboard::key::Named,
         layout::{self, Layout},
         renderer::{self, Quad, Renderer as _},
         text::Renderer as _,
         widget::{
-            self,
+            self, Id, Widget,
             operation::{self, Operation},
-            tree, Id, Widget,
+            tree,
         },
-        Border, Shell,
     },
     theme::Theme,
-    Renderer,
 };
 use cosmic_text::LayoutGlyph;
 use indexmap::IndexSet;
@@ -43,7 +43,10 @@ use std::{
     time::{Duration, Instant},
 };
 
-use crate::{key_bind::key_binds, terminal::Metadata, Action, Terminal, TerminalScroll};
+use crate::{
+    Action, Terminal, TerminalScroll, key_bind::key_binds, mouse_reporter::MouseReporter,
+    terminal::Metadata,
+};
 
 pub struct TerminalBox<'a, Message> {
     terminal: &'a Mutex<Terminal>,
@@ -59,6 +62,8 @@ pub struct TerminalBox<'a, Message> {
     mouse_inside_boundary: Option<bool>,
     on_middle_click: Option<Box<dyn Fn() -> Message + 'a>>,
     on_open_hyperlink: Option<Box<dyn Fn(String) -> Message + 'a>>,
+    on_window_focused: Option<Box<dyn Fn() -> Message + 'a>>,
+    on_window_unfocused: Option<Box<dyn Fn() -> Message + 'a>>,
     key_binds: HashMap<KeyBind, Action>,
 }
 
@@ -82,6 +87,8 @@ where
             on_middle_click: None,
             key_binds: key_binds(),
             on_open_hyperlink: None,
+            on_window_focused: None,
+            on_window_unfocused: None,
         }
     }
 
@@ -143,6 +150,16 @@ where
         on_open_hyperlink: Option<Box<dyn Fn(String) -> Message + 'a>>,
     ) -> Self {
         self.on_open_hyperlink = on_open_hyperlink;
+        self
+    }
+
+    pub fn on_window_focused(mut self, on_window_focused: impl Fn() -> Message + 'a) -> Self {
+        self.on_window_focused = Some(Box::new(on_window_focused));
+        self
+    }
+
+    pub fn on_window_unfocused(mut self, on_window_unfocused: impl Fn() -> Message + 'a) -> Self {
+        self.on_window_unfocused = Some(Box::new(on_window_unfocused));
         self
     }
 }
@@ -276,7 +293,10 @@ where
         let state = tree.state.downcast_ref::<State>();
 
         let cosmic_theme = theme.cosmic();
-        let radius_s = cosmic_theme.corner_radii.radius_s[0] - 1.0;
+        // matches the corners to the window border
+        let corner_radius = cosmic_theme
+            .radius_s()
+            .map(|x| if x < 4.0 { x - 1.0 } else { x + 3.0 });
         let scrollbar_w = f32::from(cosmic_theme.spacing.space_xxs);
 
         let view_position = layout.position() + [self.padding.left, self.padding.top].into();
@@ -312,9 +332,9 @@ where
                     bounds: layout.bounds(),
                     border: Border {
                         radius: if self.show_headerbar {
-                            [0.0, 0.0, radius_s, radius_s].into()
+                            [0.0, 0.0, corner_radius[2], corner_radius[3]].into()
                         } else {
-                            [radius_s, radius_s, radius_s, radius_s].into()
+                            corner_radius.into()
                         },
                         width: self.border.width,
                         color: self.border.color,
@@ -414,7 +434,7 @@ where
                         }
 
                         if !metadata.flags.is_empty() {
-                            let style_line_height = (self.glyph_font_size / 10.0).clamp(2.0, 16.0);
+                            let style_line_height = (self.glyph_font_size / 10.0).clamp(1.0, 16.0);
 
                             let line_color = cosmic_text_to_iced_color(metadata.underline_color);
 
@@ -662,7 +682,30 @@ where
                     };
                     renderer.fill_quad(quad, color);
                 }
-                CursorShape::HollowBlock => {} // TODO not sure when this would even be activated
+                CursorShape::Block if !state.is_focused => {
+                    let quad = Quad {
+                        bounds: Rectangle::new(top_left, Size::new(width, height)),
+                        border: Border {
+                            width: 1.0,
+                            color,
+                            ..Default::default()
+                        },
+                        ..Default::default()
+                    };
+                    renderer.fill_quad(quad, Color::TRANSPARENT);
+                }
+                CursorShape::HollowBlock => {
+                    let quad = Quad {
+                        bounds: Rectangle::new(top_left, Size::new(width, height)),
+                        border: Border {
+                            width: 1.0,
+                            color,
+                            ..Default::default()
+                        },
+                        ..Default::default()
+                    };
+                    renderer.fill_quad(quad, Color::TRANSPARENT);
+                }
                 CursorShape::Block | CursorShape::Hidden => {} // Block is handled seperately
             }
         }
@@ -691,6 +734,20 @@ where
         let is_mouse_mode = terminal.term.lock().mode().intersects(TermMode::MOUSE_MODE);
         let mut status = Status::Ignored;
         match event {
+            Event::Window(event) => match event {
+                cosmic::iced::window::Event::Focused => {
+                    if let Some(on_window_focused) = &self.on_window_focused {
+                        shell.publish(on_window_focused());
+                    }
+                }
+                cosmic::iced::window::Event::Unfocused => {
+                    state.is_focused = false;
+                    if let Some(on_window_unfocused) = &self.on_window_unfocused {
+                        shell.publish(on_window_unfocused());
+                    }
+                }
+                _ => {}
+            },
             Event::Keyboard(KeyEvent::KeyPressed {
                 key: Key::Named(named),
                 modified_key: Key::Named(modified_named),
@@ -1141,33 +1198,43 @@ where
                         let row = y / terminal.size().cell_height;
                         terminal.scroll_mouse(delta, &state.modifiers, col as u32, row as u32);
                     } else {
-                        match delta {
-                            ScrollDelta::Lines { x: _, y } => {
-                                //TODO: this adjustment is just a guess!
-                                state.scroll_pixels = 0.0;
-                                let lines = (-y * 6.0) as i32;
-                                if lines != 0 {
-                                    terminal.scroll(TerminalScroll::Delta(-lines));
+                        if terminal.term.lock().mode().contains(TermMode::ALT_SCREEN) {
+                            MouseReporter::report_mouse_wheel_as_arrows(
+                                &terminal,
+                                terminal.size().cell_width,
+                                terminal.size().cell_height,
+                                delta,
+                            );
+                            status = Status::Captured;
+                        } else {
+                            match delta {
+                                ScrollDelta::Lines { x: _, y } => {
+                                    //TODO: this adjustment is just a guess!
+                                    state.scroll_pixels = 0.0;
+                                    let lines = (-y * 6.0) as i32;
+                                    if lines != 0 {
+                                        terminal.scroll(TerminalScroll::Delta(-lines));
+                                    }
+                                    status = Status::Captured;
                                 }
-                                status = Status::Captured;
-                            }
-                            ScrollDelta::Pixels { x: _, y } => {
-                                //TODO: this adjustment is just a guess!
-                                state.scroll_pixels -= y * 6.0;
-                                let mut lines = 0;
-                                let metrics = terminal.with_buffer(|buffer| buffer.metrics());
-                                while state.scroll_pixels <= -metrics.line_height {
-                                    lines -= 1;
-                                    state.scroll_pixels += metrics.line_height;
+                                ScrollDelta::Pixels { x: _, y } => {
+                                    //TODO: this adjustment is just a guess!
+                                    state.scroll_pixels -= y * 6.0;
+                                    let mut lines = 0;
+                                    let metrics = terminal.with_buffer(|buffer| buffer.metrics());
+                                    while state.scroll_pixels <= -metrics.line_height {
+                                        lines -= 1;
+                                        state.scroll_pixels += metrics.line_height;
+                                    }
+                                    while state.scroll_pixels >= metrics.line_height {
+                                        lines += 1;
+                                        state.scroll_pixels -= metrics.line_height;
+                                    }
+                                    if lines != 0 {
+                                        terminal.scroll(TerminalScroll::Delta(-lines));
+                                    }
+                                    status = Status::Captured;
                                 }
-                                while state.scroll_pixels >= metrics.line_height {
-                                    lines += 1;
-                                    state.scroll_pixels -= metrics.line_height;
-                                }
-                                if lines != 0 {
-                                    terminal.scroll(TerminalScroll::Delta(-lines));
-                                }
-                                status = Status::Captured;
                             }
                         }
                     }

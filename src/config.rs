@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-only
 
 use cosmic::{
-    cosmic_config::{self, cosmic_config_derive::CosmicConfigEntry, CosmicConfigEntry},
+    cosmic_config::{self, CosmicConfigEntry, cosmic_config_derive::CosmicConfigEntry},
     theme,
 };
 use cosmic_text::{Metrics, Stretch, Weight};
@@ -247,7 +247,7 @@ impl Default for Config {
             color_schemes_light: BTreeMap::new(),
             dim_font_weight: Weight::NORMAL.0,
             focus_follow_mouse: false,
-            font_name: "Fira Mono".to_string(),
+            font_name: "Noto Sans Mono".to_string(),
             font_size: 14,
             font_size_zoom_step_mul_100: 100,
             font_stretch: Stretch::Normal.to_number(),

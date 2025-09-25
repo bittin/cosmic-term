@@ -1,4 +1,5 @@
 use alacritty_terminal::{
+    Term,
     event::{Event, EventListener, Notify, OnResize, WindowSize},
     event_loop::{EventLoop, Msg, Notifier},
     grid::Dimensions,
@@ -6,18 +7,17 @@ use alacritty_terminal::{
     selection::{Selection, SelectionType},
     sync::FairMutex,
     term::{
+        Config, TermDamage, TermMode,
         cell::Flags,
         color::{self, Colors},
         search::RegexSearch,
-        viewport_to_point, Config, TermDamage, TermMode,
+        viewport_to_point,
     },
     tty::{self, Options},
     vte::ansi::{Color, CursorShape, NamedColor, Rgb},
-    Term,
 };
 use cosmic::{
-    iced::advanced::graphics::text::font_system,
-    iced::mouse::ScrollDelta,
+    iced::{advanced::graphics::text::font_system, mouse::ScrollDelta},
     widget::{pane_grid, segmented_button},
 };
 use cosmic_text::{
@@ -30,8 +30,8 @@ use std::{
     collections::HashMap,
     io, mem,
     sync::{
+        Arc, Mutex, Weak,
         atomic::{AtomicU32, Ordering},
-        Arc, Weak,
     },
     time::Instant,
 };
@@ -155,7 +155,7 @@ type TabModel = segmented_button::Model<segmented_button::SingleSelect>;
 pub struct TerminalPaneGrid {
     pub panes: pane_grid::State<TabModel>,
     pub panes_created: usize,
-    pub focus: pane_grid::Pane,
+    focus: pane_grid::Pane,
 }
 
 impl TerminalPaneGrid {
@@ -175,6 +175,34 @@ impl TerminalPaneGrid {
     }
     pub fn active_mut(&mut self) -> Option<&mut TabModel> {
         self.panes.get_mut(self.focus)
+    }
+    pub fn set_focus(&mut self, pane: pane_grid::Pane) {
+        self.focus = pane;
+        self.update_terminal_focus();
+    }
+    pub fn focused(&self) -> pane_grid::Pane {
+        self.focus
+    }
+
+    pub fn update_terminal_focus(&self) {
+        for (pane, tab_model) in self.panes.panes.iter() {
+            let entity = tab_model.active();
+            if let Some(terminal) = tab_model.data::<Mutex<Terminal>>(entity) {
+                let mut terminal = terminal.lock().unwrap();
+                terminal.is_focused = self.focus == *pane;
+                terminal.update();
+            }
+        }
+    }
+    pub fn unfocus_all_terminals(&self) {
+        for (_pane, tab_model) in self.panes.panes.iter() {
+            let entity = tab_model.active();
+            if let Some(terminal) = tab_model.data::<Mutex<Terminal>>(entity) {
+                let mut terminal = terminal.lock().unwrap();
+                terminal.is_focused = false;
+                terminal.update();
+            }
+        }
     }
 }
 
@@ -219,6 +247,7 @@ pub struct Terminal {
     pub active_regex_match: Option<alacritty_terminal::term::search::Match>,
     bold_font_weight: Weight,
     buffer: Arc<Buffer>,
+    is_focused: bool,
     colors: Colors,
     default_attrs: Attrs<'static>,
     dim_font_weight: Weight,
@@ -250,7 +279,7 @@ impl Terminal {
         let bold_font_weight = app_config.bold_font_weight;
         let use_bright_bold = app_config.use_bright_bold;
 
-        let metrics = Metrics::new(14.0, 20.0);
+        let metrics = Metrics::new(14.0, 21.0);
 
         let default_bg = convert_color(&colors, Color::Named(NamedColor::Background));
         let default_fg = convert_color(&colors, Color::Named(NamedColor::Foreground));
@@ -275,7 +304,7 @@ impl Terminal {
             buffer.set_wrap(font_system, Wrap::None);
 
             // Use size of space to determine cell size
-            buffer.set_text(font_system, " ", default_attrs, Shaping::Advanced);
+            buffer.set_text(font_system, " ", &default_attrs, Shaping::Advanced, None);
             let layout = buffer.line_layout(font_system, 0).unwrap();
             let w = layout[0].w;
             buffer.set_monospace_width(font_system, Some(w));
@@ -324,6 +353,7 @@ impl Terminal {
             term,
             use_bright_bold,
             zoom_adj: Default::default(),
+            is_focused: true,
         })
     }
 
@@ -562,12 +592,18 @@ impl Terminal {
         let mut update = false;
         let zoom_adj = self.zoom_adj;
         if self.default_attrs.stretch != config.typed_font_stretch() {
-            self.default_attrs = self.default_attrs.stretch(config.typed_font_stretch());
+            self.default_attrs = self
+                .default_attrs
+                .clone()
+                .stretch(config.typed_font_stretch());
             update_cell_size = true;
         }
 
         if self.default_attrs.weight.0 != config.font_weight {
-            self.default_attrs = self.default_attrs.weight(Weight(config.font_weight));
+            self.default_attrs = self
+                .default_attrs
+                .clone()
+                .weight(Weight(config.font_weight));
             update_cell_size = true;
         }
 
@@ -644,14 +680,20 @@ impl Terminal {
     }
 
     pub fn update_cell_size(&mut self) {
-        let default_attrs = self.default_attrs;
+        let default_attrs = self.default_attrs.clone();
         let (cell_width, cell_height) = {
             let mut font_system = font_system().write().unwrap();
             self.with_buffer_mut(|buffer| {
                 buffer.set_wrap(font_system.raw(), Wrap::None);
 
                 // Use size of space to determine cell size
-                buffer.set_text(font_system.raw(), " ", default_attrs, Shaping::Advanced);
+                buffer.set_text(
+                    font_system.raw(),
+                    " ",
+                    &default_attrs,
+                    Shaping::Advanced,
+                    None,
+                );
                 let layout = buffer.line_layout(font_system.raw(), 0).unwrap();
                 let w = layout[0].w;
                 buffer.set_monospace_width(font_system.raw(), Some(w));
@@ -691,7 +733,7 @@ impl Terminal {
             let mut line_i = 0;
             let mut last_point = None;
             let mut text = String::from(LRI);
-            let mut attrs_list = AttrsList::new(self.default_attrs);
+            let mut attrs_list = AttrsList::new(&self.default_attrs);
             {
                 let mut term = self.term.lock();
                 //TODO: use damage?
@@ -718,7 +760,7 @@ impl Terminal {
                             buffer.lines.push(BufferLine::new(
                                 "",
                                 LineEnding::default(),
-                                AttrsList::new(self.default_attrs),
+                                AttrsList::new(&self.default_attrs),
                                 Shaping::Advanced,
                             ));
                             buffer.set_redraw(true);
@@ -758,7 +800,7 @@ impl Terminal {
                     }
                     let end = text.len();
 
-                    let mut attrs = self.default_attrs;
+                    let mut attrs = self.default_attrs.clone();
 
                     let cell_fg = if indexed.cell.flags.contains(Flags::DIM) {
                         as_dim(indexed.cell.fg)
@@ -787,6 +829,7 @@ impl Terminal {
                     // Change color if cursor
                     if indexed.point == grid.cursor.point
                         && term.renderable_content().cursor.shape == CursorShape::Block
+                        && self.is_focused
                     {
                         //Use specific cursor color if requested
                         if term.colors()[NamedColor::Cursor].is_some() {
@@ -861,7 +904,7 @@ impl Terminal {
                         attrs = attrs.cache_key_flags(CacheKeyFlags::FAKE_ITALIC);
                     }
                     if attrs != attrs_list.defaults() {
-                        attrs_list.add_span(start..end, attrs);
+                        attrs_list.add_span(start..end, &attrs);
                     }
 
                     last_point = Some(indexed.point);
@@ -873,7 +916,7 @@ impl Terminal {
                 buffer.lines.push(BufferLine::new(
                     "",
                     LineEnding::default(),
-                    AttrsList::new(self.default_attrs),
+                    AttrsList::new(&self.default_attrs),
                     Shaping::Advanced,
                 ));
                 buffer.set_redraw(true);

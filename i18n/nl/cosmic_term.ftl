@@ -1,12 +1,15 @@
-cosmic-terminal = COSMIC-terminal
+cosmic-terminal = COSMIC Terminal
 new-terminal = Nieuw terminalvenster
 
 # Context Pages
 
+
 ## About
-git-description = Git commit {$hash} op {$date}
+
+git-description = Git commit { $hash } op { $date }
 
 ## Color schemes
+
 color-schemes = Kleurenpaletten
 rename = Hernoemen
 export = Exporteren
@@ -15,6 +18,7 @@ import = Importeren
 import-errors = Importfouten
 
 ## Profiles
+
 profiles = Profielen
 name = Naam
 command-line = Commandoregel
@@ -25,12 +29,14 @@ new-profile = Nieuw profiel
 make-default = Als standaard instellen
 working-directory = Werkmap
 hold = Behouden
-remain-open = Venster geopend houden nadat het subproces voltooid is
+remain-open = Dit venster openhouden nadat het kind-proces eindigt.
 
 ## Settings
+
 settings = Instellingen
 
 ### Appearance
+
 appearance = Weergave
 theme = Thema
 match-desktop = Systeemstandaard
@@ -42,8 +48,9 @@ default-zoom-step = Zoomstappen
 opacity = Doorzichtigheid van de achtergrond
 
 ### Font
+
 font = Lettertype
-advanced-font-settings = Geavanceerde lettertype-instellingen 
+advanced-font-settings = Geavanceerde lettertype-instellingen
 default-font = Lettertype
 default-font-size = Grootte lettertype
 default-font-stretch = Breedte lettertype
@@ -53,14 +60,15 @@ default-bold-font-weight = Vette letterdikte
 use-bright-bold = Vette tekst feller weergeven
 
 ### Splits
+
 splits = Splitsen
-focus-follow-mouse = Focus voor typen volgt de cursor
+focus-follow-mouse = Invoerfocus volgt de muis
 
 ### Advanced
+
 advanced = Geavanceerd
 show-headerbar = Koptekst tonen
-show-header-description = Toon de koptekst via het rechtermuisknopmenu
-
+show-header-description = Toon de koptekst via het rechtermuisknopmenu.
 # Find
 find-placeholder = Zoeken...
 find-previous = Vorige zoeken
@@ -68,7 +76,9 @@ find-next = Volgende zoeken
 
 # Menu
 
+
 ## File
+
 file = Bestand
 new-tab = Nieuw tabblad
 new-window = Nieuw venster
@@ -78,6 +88,7 @@ close-tab = Tabblad sluiten
 quit = Sluiten
 
 ## Edit
+
 edit = Bewerken
 copy = Kopiëren
 paste = Plakken
@@ -86,6 +97,7 @@ find = Zoeken
 clear-scrollback = Scrollgeschiedenis wissen
 
 ## View
+
 view = Beeld
 zoom-in = Tekst vergroten
 zoom-reset = Normale tekstgrootte
@@ -95,6 +107,7 @@ previous-tab = Vorig tabblad
 split-horizontal = Horizontaal splitsen
 split-vertical = Verticaal splitsen
 pane-toggle-maximize = Naar volledig scherm omschakelen
-menu-color-schemes = Kleurenpaletten
+menu-color-schemes = Kleurenpaletten...
 menu-settings = Instellingen...
-menu-about = Over COSMIC-terminal...
+menu-about = Over COSMIC Terminal
+support = Ondersteuning
