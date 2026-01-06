@@ -12,7 +12,7 @@ use cosmic::{
     cosmic_config::{self, ConfigSet, CosmicConfigEntry},
     cosmic_theme, executor,
     iced::{
-        self, Alignment, Color, Event, Length, Limits, Padding, Point, Subscription,
+        self, Alignment, Color, Event, Length, Limits, Padding, Subscription,
         advanced::graphics::text::font_system,
         clipboard, event,
         futures::SinkExt,
@@ -63,8 +63,11 @@ mod terminal;
 use terminal_box::terminal_box;
 
 use crate::dnd::DndDrop;
+use crate::menu::MenuState;
 mod terminal_box;
 
+#[cfg(feature = "password_manager")]
+mod password_manager;
 mod terminal_theme;
 
 mod dnd;
@@ -223,6 +226,7 @@ pub enum Action {
     CopyOrSigint,
     CopyPrimary,
     Find,
+    LaunchUrlByMenu,
     PaneFocusDown,
     PaneFocusLeft,
     PaneFocusRight,
@@ -236,6 +240,8 @@ pub enum Action {
     Profiles,
     SelectAll,
     Settings,
+    #[cfg(feature = "password_manager")]
+    PasswordManager,
     ShowHeaderBar(bool),
     TabActivate0,
     TabActivate1,
@@ -271,6 +277,7 @@ impl Action {
             Self::CopyOrSigint => Message::CopyOrSigint(entity_opt),
             Self::CopyPrimary => Message::CopyPrimary(entity_opt),
             Self::Find => Message::Find(true),
+            Self::LaunchUrlByMenu => Message::LaunchUrlByMenu,
             Self::PaneFocusDown => Message::PaneFocusAdjacent(pane_grid::Direction::Down),
             Self::PaneFocusLeft => Message::PaneFocusAdjacent(pane_grid::Direction::Left),
             Self::PaneFocusRight => Message::PaneFocusAdjacent(pane_grid::Direction::Right),
@@ -278,6 +285,8 @@ impl Action {
             Self::PaneSplitHorizontal => Message::PaneSplit(pane_grid::Axis::Horizontal),
             Self::PaneSplitVertical => Message::PaneSplit(pane_grid::Axis::Vertical),
             Self::PaneToggleMaximized => Message::PaneToggleMaximized,
+            #[cfg(feature = "password_manager")]
+            Self::PasswordManager => Message::ToggleContextPage(ContextPage::PasswordManager),
             Self::Paste => Message::Paste(entity_opt),
             Self::PastePrimary => Message::PastePrimary(entity_opt),
             Self::ProfileOpen(profile_id) => Message::ProfileOpen(*profile_id),
@@ -353,6 +362,7 @@ pub enum Message {
     FocusFollowMouse(bool),
     Key(Modifiers, Key),
     LaunchUrl(String),
+    LaunchUrlByMenu,
     Modifiers(Modifiers),
     MouseEnter(pane_grid::Pane),
     Opacity(u8),
@@ -362,6 +372,10 @@ pub enum Message {
     PaneResized(pane_grid::ResizeEvent),
     PaneSplit(pane_grid::Axis),
     PaneToggleMaximized,
+    #[cfg(feature = "password_manager")]
+    PasswordManager(password_manager::PasswordManagerMessage),
+    #[cfg(feature = "password_manager")]
+    PasswordPaste(secstr::SecUtf8, pane_grid::Pane),
     Paste(Option<segmented_button::Entity>),
     PastePrimary(Option<segmented_button::Entity>),
     PasteValue(Option<segmented_button::Entity>, String),
@@ -386,7 +400,7 @@ pub enum Message {
     TabActivateJump(usize),
     TabClose(Option<segmented_button::Entity>),
     TabContextAction(segmented_button::Entity, Action),
-    TabContextMenu(pane_grid::Pane, Option<Point>),
+    TabContextMenu(pane_grid::Pane, Option<MenuState>),
     TabNew,
     TabNewNoProfile,
     TabNext,
@@ -412,6 +426,8 @@ pub enum ContextPage {
     ColorSchemes(ColorSchemeKind),
     Profiles,
     Settings,
+    #[cfg(feature = "password_manager")]
+    PasswordManager,
 }
 
 /// The [`App`] stores application-specific state.
@@ -456,6 +472,8 @@ pub struct App {
     profile_expanded: Option<ProfileId>,
     show_advanced_font_settings: bool,
     modifiers: Modifiers,
+    #[cfg(feature = "password_manager")]
+    password_mgr: password_manager::PasswordManager,
 }
 
 impl App {
@@ -618,6 +636,9 @@ impl App {
     fn update_focus(&self) -> Task<Message> {
         if self.find {
             widget::text_input::focus(self.find_search_id.clone())
+        } else if self.core.window.show_context {
+            // TODO focus the context page?
+            Task::none()
         } else if let Some(terminal_id) = self.terminal_ids.get(&self.pane_model.focused()).cloned()
         {
             widget::text_input::focus(terminal_id)
@@ -1012,7 +1033,7 @@ impl App {
                                 .spacing(space_xxxs)
                                 .into(),
                                 widget::horizontal_space().into(),
-                                widget::toggler(profile.hold)
+                                widget::toggler(profile.drain_on_exit)
                                     .on_toggle(move |t| Message::ProfileHold(profile_id, t))
                                     .into(),
                             ])
@@ -1288,7 +1309,7 @@ impl App {
                                         let options = tty::Options {
                                             shell,
                                             working_directory,
-                                            hold: profile.hold,
+                                            drain_on_exit: profile.drain_on_exit,
                                             env: HashMap::new(),
                                         };
                                         let tab_title_override = if profile.tab_title.is_empty() {
@@ -1519,6 +1540,7 @@ impl Application for App {
             .version(env!("CARGO_PKG_VERSION"))
             .author("System76")
             .license("GPL-3.0-only")
+            .license_url("https://spdx.org/licenses/GPL-3.0-only")
             .developers([("Jeremy Soller", "jeremy@system76.com")])
             .links([
                 (fl!("repository"), "https://github.com/pop-os/cosmic-term"),
@@ -1568,6 +1590,8 @@ impl Application for App {
             profile_expanded: None,
             show_advanced_font_settings: false,
             modifiers: Modifiers::empty(),
+            #[cfg(feature = "password_manager")]
+            password_mgr: Default::default(),
         };
 
         app.set_curr_font_weights_and_stretches();
@@ -1581,6 +1605,10 @@ impl Application for App {
         if self.core.window.show_context {
             // Close context drawer if open
             self.core.window.show_context = false;
+            #[cfg(feature = "password_manager")]
+            if self.context_page == ContextPage::PasswordManager {
+                self.password_mgr.clear();
+            }
         } else if self.find {
             // Close find if open
             self.find = false;
@@ -1595,6 +1623,10 @@ impl Application for App {
         if self.core.window.show_context {
             Task::none()
         } else {
+            #[cfg(feature = "password_manager")]
+            if self.context_page == ContextPage::PasswordManager {
+                self.password_mgr.clear();
+            }
             self.update_focus()
         }
     }
@@ -2093,6 +2125,23 @@ impl Application for App {
                     log::warn!("failed to open {:?}: {}", url, err);
                 }
             }
+            Message::LaunchUrlByMenu => {
+                if let Some(tab_model) = self.pane_model.active() {
+                    let entity = tab_model.active();
+                    if let Some(terminal) = tab_model.data::<Mutex<Terminal>>(entity) {
+                        // Update context menu position
+                        let mut terminal = terminal.lock().unwrap();
+                        if let Some(url) =
+                            terminal.context_menu.as_ref().and_then(|m| m.link.as_ref())
+                        {
+                            if let Err(err) = open::that_detached(url) {
+                                log::warn!("failed to open {:?}: {}", url, err);
+                            }
+                        }
+                        terminal.context_menu = None;
+                    }
+                }
+            }
             Message::Modifiers(modifiers) => {
                 self.modifiers = modifiers;
             }
@@ -2146,6 +2195,23 @@ impl Application for App {
                 self.pane_model.panes.drop(pane, target);
             }
             Message::PaneDragged(_) => {}
+            #[cfg(feature = "password_manager")]
+            Message::PasswordManager(msg) => {
+                return self.password_mgr.update(msg);
+            }
+            #[cfg(feature = "password_manager")]
+            Message::PasswordPaste(password, pane) => {
+                if let Some(tab_model) = self.pane_model.panes.get(pane) {
+                    let entity = tab_model.active();
+                    if let Some(terminal) = tab_model.data::<Mutex<Terminal>>(entity) {
+                        let terminal = terminal.lock().unwrap();
+                        terminal.paste(password.into_unsecure());
+                        terminal.input_scroll(b"\n".as_slice());
+                        self.core.window.show_context = false;
+                        self.password_mgr.clear();
+                    }
+                }
+            }
             Message::Paste(entity_opt) => {
                 return clipboard::read().map(move |value_opt| match value_opt {
                     Some(value) => action::app(Message::PasteValue(entity_opt, value)),
@@ -2186,9 +2252,9 @@ impl Application for App {
             Message::ProfileExpand(profile_id) => {
                 self.profile_expanded = Some(profile_id);
             }
-            Message::ProfileHold(profile_id, hold) => {
+            Message::ProfileHold(profile_id, drain_on_exit) => {
                 if let Some(profile) = self.config.profiles.get_mut(&profile_id) {
-                    profile.hold = hold;
+                    profile.drain_on_exit = drain_on_exit;
                     return self.save_profiles();
                 }
             }
@@ -2371,14 +2437,25 @@ impl Application for App {
                         // Close context menu
                         {
                             let mut terminal = terminal.lock().unwrap();
-                            terminal.context_menu = None;
+                            //Some actions need the menu_state,
+                            //so only clear the position for them.
+                            match action {
+                                Action::LaunchUrlByMenu => {
+                                    if let Some(context_menu) = terminal.context_menu.as_mut() {
+                                        context_menu.position = None;
+                                    }
+                                }
+                                _ => {
+                                    terminal.context_menu = None;
+                                }
+                            }
                         }
                         // Run action's message
                         return self.update(action.message(Some(entity)));
                     }
                 }
             }
-            Message::TabContextMenu(pane, position_opt) => {
+            Message::TabContextMenu(pane, menu_state) => {
                 // Close any existing context menues
                 let panes: Vec<_> = self.pane_model.panes.iter().collect();
                 for (_pane, tab_model) in panes {
@@ -2395,7 +2472,7 @@ impl Application for App {
                     if let Some(terminal) = tab_model.data::<Mutex<Terminal>>(entity) {
                         // Update context menu position
                         let mut terminal = terminal.lock().unwrap();
-                        terminal.context_menu = position_opt;
+                        terminal.context_menu = menu_state;
                     }
                 }
 
@@ -2582,9 +2659,13 @@ impl Application for App {
             Message::ToggleContextPage(context_page) => {
                 if self.context_page == context_page {
                     self.core.window.show_context = !self.core.window.show_context;
+                    self.pane_model.update_terminal_focus();
+
+                    return self.update_focus();
                 } else {
                     self.context_page = context_page;
                     self.core.window.show_context = true;
+                    self.pane_model.unfocus_all_terminals();
                 }
 
                 // Extra work to do to prepare context pages
@@ -2611,6 +2692,16 @@ impl Application for App {
                             ColorSchemeKind::Light => light_entity,
                         });
                 }
+
+                #[cfg(feature = "password_manager")]
+                if ContextPage::PasswordManager == context_page {
+                    if self.core.window.show_context {
+                        self.password_mgr.pane = Some(self.pane_model.focused());
+                        return self.password_mgr.refresh_password_list();
+                    } else {
+                        self.password_mgr.clear();
+                    }
+                }
             }
             Message::UpdateDefaultProfile((default, profile_id)) => {
                 config_set!(default_profile, default.then_some(profile_id));
@@ -2632,7 +2723,9 @@ impl Application for App {
                 }
             },
             Message::WindowFocused => {
-                self.pane_model.update_terminal_focus();
+                if !self.core.window.show_context {
+                    self.pane_model.update_terminal_focus();
+                }
                 return self.update_focus();
             }
             Message::WindowUnfocused => {
@@ -2666,7 +2759,7 @@ impl Application for App {
         Some(match self.context_page {
             ContextPage::About => context_drawer::about(
                 &self.about,
-                Message::LaunchUrl,
+                |s| Message::LaunchUrl(s.to_string()),
                 Message::ToggleContextPage(ContextPage::About),
             ),
             ContextPage::ColorSchemes(color_scheme_kind) => context_drawer::context_drawer(
@@ -2684,6 +2777,12 @@ impl Application for App {
                 Message::ToggleContextPage(ContextPage::Settings),
             )
             .title(fl!("settings")),
+            #[cfg(feature = "password_manager")]
+            ContextPage::PasswordManager => context_drawer::context_drawer(
+                self.password_mgr.context_page(self.core.system_theme()),
+                Message::ToggleContextPage(ContextPage::PasswordManager),
+            )
+            .title(fl!("passwords-title")),
         })
     }
 
@@ -2739,15 +2838,15 @@ impl Application for App {
             if let Some(terminal) = tab_model.data::<Mutex<Terminal>>(entity) {
                 let mut terminal_box = terminal_box(terminal)
                     .id(terminal_id)
-                    .on_context_menu(move |position_opt| {
-                        Message::TabContextMenu(pane, position_opt)
-                    })
+                    .disabled(self.core.window.show_context)
+                    .on_context_menu(move |menu_state| Message::TabContextMenu(pane, menu_state))
                     .on_middle_click(move || Message::MiddleClick(pane, Some(entity_middle_click)))
                     .on_open_hyperlink(Some(Box::new(Message::LaunchUrl)))
                     .on_window_focused(|| Message::WindowFocused)
                     .on_window_unfocused(|| Message::WindowUnfocused)
                     .opacity(self.config.opacity_ratio())
                     .padding(space_xxs)
+                    .sharp_corners(self.core.window.sharp_corners)
                     .show_headerbar(self.config.show_headerbar);
 
                 if self.config.focus_follow_mouse {
@@ -2756,14 +2855,22 @@ impl Application for App {
 
                 let context_menu = {
                     let terminal = terminal.lock().unwrap();
-                    terminal.context_menu
+                    terminal.context_menu.clone()
                 };
 
                 let tab_element: Element<'_, Message> = match context_menu {
-                    Some(point) => widget::popover(terminal_box.context_menu(point))
-                        .popup(menu::context_menu(&self.config, &self.key_binds, entity))
-                        .position(widget::popover::Position::Point(point))
-                        .into(),
+                    Some(menu_state) => match menu_state.position {
+                        Some(point) => widget::popover(terminal_box.context_menu(point))
+                            .popup(menu::context_menu(
+                                &self.config,
+                                &self.key_binds,
+                                entity,
+                                menu_state.link,
+                            ))
+                            .position(widget::popover::Position::Point(point))
+                            .into(),
+                        None => terminal_box.into(),
+                    },
                     None => terminal_box.into(),
                 };
                 tab_column = tab_column.push(tab_element);

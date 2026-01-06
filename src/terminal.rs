@@ -41,6 +41,7 @@ pub use alacritty_terminal::grid::Scroll as TerminalScroll;
 
 use crate::{
     config::{ColorSchemeKind, Config as AppConfig, ProfileId},
+    menu::MenuState,
     mouse_reporter::MouseReporter,
 };
 
@@ -236,7 +237,7 @@ impl Metadata {
 }
 
 pub struct Terminal {
-    pub context_menu: Option<cosmic::iced::Point>,
+    pub context_menu: Option<MenuState>,
     pub metadata_set: IndexSet<Metadata>,
     pub needs_update: bool,
     pub profile_id_opt: Option<ProfileId>,
@@ -245,6 +246,7 @@ pub struct Terminal {
     pub url_regex_search: RegexSearch,
     pub regex_matches: Vec<alacritty_terminal::term::search::Match>,
     pub active_regex_match: Option<alacritty_terminal::term::search::Match>,
+    pub active_hyperlink_id: Option<String>,
     bold_font_weight: Weight,
     buffer: Arc<Buffer>,
     is_focused: bool,
@@ -327,12 +329,14 @@ impl Terminal {
         let window_id = 0;
         let pty = tty::new(&options, size.into(), window_id)?;
 
-        let pty_event_loop = EventLoop::new(term.clone(), event_proxy, pty, options.hold, false)?;
+        let pty_event_loop =
+            EventLoop::new(term.clone(), event_proxy, pty, options.drain_on_exit, false)?;
         let notifier = Notifier(pty_event_loop.channel());
         let _pty_join_handle = pty_event_loop.spawn();
 
         Ok(Self {
             active_regex_match: None,
+            active_hyperlink_id: None,
             url_regex_search: url_regex_search(),
             regex_matches: Vec::new(),
             bold_font_weight: Weight(bold_font_weight),
@@ -882,6 +886,28 @@ impl Terminal {
 
                     if let Some(active_match) = &self.active_regex_match {
                         if active_match.contains(&indexed.point) {
+                            flags |= Flags::UNDERLINE;
+                        }
+                    }
+                    if let Some(active_id) = &self.active_hyperlink_id {
+                        let mut matches_active = indexed
+                            .cell
+                            .hyperlink()
+                            .is_some_and(|link| link.id() == active_id);
+                        if !matches_active
+                            && indexed.cell.flags.intersects(
+                                Flags::WIDE_CHAR_SPACER | Flags::LEADING_WIDE_CHAR_SPACER,
+                            )
+                            && indexed.point.column.0 > 0
+                        {
+                            matches_active = grid[Point::new(
+                                indexed.point.line,
+                                Column(indexed.point.column.0 - 1),
+                            )]
+                            .hyperlink()
+                            .is_some_and(|link| link.id() == active_id);
+                        }
+                        if matches_active {
                             flags |= Flags::UNDERLINE;
                         }
                     }

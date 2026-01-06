@@ -6,7 +6,6 @@ new-terminal = Ny terminal
 
 ## Om
 
-git-description = Git commit { $hash } på { $date }
 
 ## Färgscheman
 
@@ -40,11 +39,11 @@ settings = Inställningar
 appearance = Utseende
 theme = Tema
 match-desktop = Matcha skrivbordet
-dark = Mörk
-light = Ljus
+dark = Mörkt
+light = Ljust
 syntax-dark = Färgschema mörkt
 syntax-light = Färgschema ljust
-default-zoom-step = Zoom steg
+default-zoom-step = Zoom-steg
 opacity = Bakgrundens opacitet
 
 ### Teckensnitt
@@ -71,8 +70,8 @@ show-headerbar = Visa rubrikrad
 show-header-description = Visa rubrikrad från högerklicksmenyn.
 # Sök
 find-placeholder = Sök…
-find-previous = Hitta föregående
-find-next = Hitta nästa
+find-previous = Sök föregående
+find-next = Sök nästa
 
 # Meny
 
@@ -95,6 +94,10 @@ paste = Klistra in
 select-all = Välj alla
 find = Sök
 
+## Öppna
+
+open-link = Öppna länk
+
 ## Visa
 
 view = Visa
@@ -106,9 +109,15 @@ previous-tab = Föregående flik
 split-horizontal = Dela horisontellt
 split-vertical = Dela vertikalt
 pane-toggle-maximize = Växla maximerad
-clear-scrollback = Rensa tillbakarullning
+clear-scrollback = Töm tillbakarullning
 menu-color-schemes = Färgscheman…
 menu-settings = Inställningar…
 menu-about = Om COSMIC Terminal…
 repository = Källkod
 support = Support
+# Lösenordshanterare
+menu-password-manager = Lösenord…
+passwords-title = Lösenord
+add-password = Lägg till lösenord
+password-input = Lösenord
+password-input-description = Beskrivning

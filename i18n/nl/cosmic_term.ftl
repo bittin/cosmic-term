@@ -1,35 +1,34 @@
 cosmic-terminal = COSMIC Terminal
-new-terminal = Nieuw terminalvenster
+new-terminal = Nieuwe terminal
 
 # Context Pages
 
 
 ## About
 
-git-description = Git commit { $hash } op { $date }
 
 ## Color schemes
 
-color-schemes = Kleurenpaletten
-rename = Hernoemen
-export = Exporteren
-delete = Verwijderen
-import = Importeren
+color-schemes = Kleurenschema's
+rename = Hernoem
+export = Exporteer
+delete = Verwijder
+import = Importeer
 import-errors = Importfouten
 
 ## Profiles
 
 profiles = Profielen
 name = Naam
-command-line = Commandoregel
+command-line = Opdrachtregel
 tab-title = Tabbladtitel
-tab-title-description = De standaard tabbladtitel overschrijven
-add-profile = Profiel toevoegen
+tab-title-description = Overschrijf de standaard tabbladtitel
+add-profile = Voeg profiel toe
 new-profile = Nieuw profiel
-make-default = Als standaard instellen
+make-default = Stel als standaard in
 working-directory = Werkmap
-hold = Behouden
-remain-open = Dit venster openhouden nadat het kind-proces eindigt.
+hold = Behoud
+remain-open = Houd dit venster open nadat het onderliggende proces eindigt.
 
 ## Settings
 
@@ -37,42 +36,42 @@ settings = Instellingen
 
 ### Appearance
 
-appearance = Weergave
+appearance = Uiterlijk
 theme = Thema
-match-desktop = Systeemstandaard
+match-desktop = Maak gelijk aan bureaublad
 dark = Donker
 light = Licht
 syntax-dark = Donkere syntaxiskleuring
 syntax-light = Lichte syntaxiskleuring
 default-zoom-step = Zoomstappen
-opacity = Doorzichtigheid van de achtergrond
+opacity = Achtergronddoorzichtigheid
 
 ### Font
 
 font = Lettertype
 advanced-font-settings = Geavanceerde lettertype-instellingen
 default-font = Lettertype
-default-font-size = Grootte lettertype
-default-font-stretch = Breedte lettertype
-default-font-weight = Normale letterdikte
-default-dim-font-weight = Subtiele letterdikte
-default-bold-font-weight = Vette letterdikte
-use-bright-bold = Vette tekst feller weergeven
+default-font-size = Lettertypegrootte
+default-font-stretch = Letterbreedte
+default-font-weight = Letterdikte standaard lettertype
+default-dim-font-weight = Letterdikte licht lettertype
+default-bold-font-weight = Letterdikte vet lettertype
+use-bright-bold = Maak vette tekst helderder
 
 ### Splits
 
-splits = Splitsen
+splits = Splits
 focus-follow-mouse = Invoerfocus volgt de muis
 
 ### Advanced
 
 advanced = Geavanceerd
-show-headerbar = Koptekst tonen
+show-headerbar = Toon koptekst
 show-header-description = Toon de koptekst via het rechtermuisknopmenu.
 # Find
-find-placeholder = Zoeken...
-find-previous = Vorige zoeken
-find-next = Volgende zoeken
+find-placeholder = Zoek…
+find-previous = Zoek vorige
+find-next = Zoek volgende
 
 # Menu
 
@@ -84,30 +83,31 @@ new-tab = Nieuw tabblad
 new-window = Nieuw venster
 profile = Profiel
 menu-profiles = Profielen...
-close-tab = Tabblad sluiten
-quit = Sluiten
+close-tab = Sluit tabblad
+quit = Beëindig
 
 ## Edit
 
-edit = Bewerken
-copy = Kopiëren
-paste = Plakken
-select-all = Alles selecteren
-find = Zoeken
-clear-scrollback = Scrollgeschiedenis wissen
+edit = Bewerk
+copy = Kopieer
+paste = Plak
+select-all = Selecteer alles
+find = Zoek
+clear-scrollback = Wis scrollgeschiedenis
 
 ## View
 
 view = Beeld
-zoom-in = Tekst vergroten
+zoom-in = Vergroot tekst
 zoom-reset = Normale tekstgrootte
-zoom-out = Tekst verkleinen
+zoom-out = Verklein tekst
 next-tab = Volgend tabblad
 previous-tab = Vorig tabblad
-split-horizontal = Horizontaal splitsen
-split-vertical = Verticaal splitsen
-pane-toggle-maximize = Naar volledig scherm omschakelen
+split-horizontal = Splits horizontaal
+split-vertical = Splits verticaal
+pane-toggle-maximize = Gemaximaliseerd
 menu-color-schemes = Kleurenpaletten...
 menu-settings = Instellingen...
-menu-about = Over COSMIC Terminal
+menu-about = Over COSMIC Terminal…
 support = Ondersteuning
+repository = Bibliotheek

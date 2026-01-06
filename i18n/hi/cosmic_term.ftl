@@ -3,7 +3,6 @@ new-terminal = नया टर्मिनल
 
 ## About
 
-git-description = Git commit { $hash } तारीख { $date }
 
 ## Color schemes
 
@@ -30,7 +29,7 @@ remain-open = चाइल्ड प्रोसेस के निकलने
 
 ## Settings
 
-settings = सेटिंग्स
+settings = सेटिंग
 
 ### Appearance
 
@@ -107,5 +106,5 @@ pane-toggle-maximize = अधिकतम करें
 menu-color-schemes = रंग योजनाएँ...
 menu-settings = सेटिंग्स...
 menu-about = कॉस्मिक टर्मिनल के बारे में...
-repository = रिपाॅज़िटरी
+repository = रिपॉजिटरी
 support = सहायता
