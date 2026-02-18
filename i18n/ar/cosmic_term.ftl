@@ -1,4 +1,6 @@
 cosmic-terminal = طرفية COSMIC
+comment = محاكي طرفي لسطح مكتب COSMIC
+keywords = cli;طرفية;أوامر;صدفة;
 new-terminal = طرفية جديدة
 
 # Context Pages
@@ -13,7 +15,7 @@ support = الدعم
 
 color-schemes = مخططات الألوان
 rename = غيِّر الاسم
-export = تصدير
+export = صدِّر
 delete = احذف
 import = استورد
 import-errors = تعذَّر الاستيراد

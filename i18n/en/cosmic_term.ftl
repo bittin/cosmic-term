@@ -1,4 +1,6 @@
 cosmic-terminal = COSMIC Terminal
+comment = Terminal emulator for the COSMIC desktop
+keywords = Command;Shell;Terminal;CLI;
 new-terminal = New terminal
 
 # Context Pages
@@ -117,6 +119,7 @@ clear-scrollback = Clear scrollback
 
 ## Open
 open-link = Open Link
+copy-link = Copy Link
 
 ## View
 view = View

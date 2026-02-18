@@ -7,6 +7,8 @@ use cosmic::iced::clipboard::dnd::DndAction;
 use cosmic::iced_core::keyboard::key::Named;
 use cosmic::widget::menu::action::MenuAction;
 use cosmic::widget::menu::key_bind::KeyBind;
+use cosmic::widget::pane_grid::Pane;
+use cosmic::widget::segmented_button::ReorderEvent;
 use cosmic::{
     Application, ApplicationExt, Element, action,
     app::{Core, Settings, Task, context_drawer},
@@ -231,6 +233,7 @@ pub enum Action {
     ClearScrollback,
     ColorSchemes(ColorSchemeKind),
     Copy,
+    CopyUrlByMenu,
     CopyOrSigint,
     CopyPrimary,
     Find,
@@ -283,6 +286,7 @@ impl Action {
                 Message::ToggleContextPage(ContextPage::ColorSchemes(*color_scheme_kind))
             }
             Self::Copy => Message::Copy(entity_opt),
+            Self::CopyUrlByMenu => Message::CopyUrlByMenu,
             Self::CopyOrSigint => Message::CopyOrSigint(entity_opt),
             Self::CopyPrimary => Message::CopyPrimary(entity_opt),
             Self::Find => Message::Find(true),
@@ -355,6 +359,7 @@ pub enum Message {
     Copy(Option<segmented_button::Entity>),
     CopyOrSigint(Option<segmented_button::Entity>),
     CopyPrimary(Option<segmented_button::Entity>),
+    CopyUrlByMenu,
     DefaultBoldFontWeight(usize),
     DefaultDimFontWeight(usize),
     DefaultFont(usize),
@@ -407,6 +412,7 @@ pub enum Message {
     ProfileRemove(ProfileId),
     ProfileSyntaxTheme(ProfileId, ColorSchemeKind, usize),
     ProfileTabTitle(ProfileId, String),
+    ReorderTab(Pane, ReorderEvent),
     Surface(surface::Action),
     SelectAll(Option<segmented_button::Entity>),
     ShowAdvancedFontSettings(bool),
@@ -1758,6 +1764,7 @@ impl Application for App {
             .icon(widget::icon::from_name(Self::APP_ID))
             .version(env!("CARGO_PKG_VERSION"))
             .author("System76")
+            .comments(fl!("comment"))
             .license("GPL-3.0-only")
             .license_url("https://spdx.org/licenses/GPL-3.0-only")
             .developers([("Jeremy Soller", "jeremy@system76.com")])
@@ -2405,6 +2412,23 @@ impl Application for App {
                     log::warn!("failed to open {:?}: {}", url, err);
                 }
             }
+            Message::CopyUrlByMenu => {
+                if let Some(tab_model) = self.pane_model.active() {
+                    let entity = tab_model.active();
+                    if let Some(terminal) = tab_model.data::<Mutex<Terminal>>(entity) {
+                        // Update context menu position
+                        let terminal = terminal.lock().unwrap();
+                        if let Some(url) =
+                            terminal.context_menu.as_ref().and_then(|m| m.link.as_ref())
+                        {
+                            return Task::batch([
+                                clipboard::write(url.to_owned()),
+                                self.update_focus(),
+                            ]);
+                        }
+                    }
+                }
+            }
             Message::LaunchUrlByMenu => {
                 if let Some(tab_model) = self.pane_model.active() {
                     let entity = tab_model.active();
@@ -2778,6 +2802,11 @@ impl Application for App {
                                         context_menu.position = None;
                                     }
                                 }
+                                Action::CopyUrlByMenu => {
+                                    if let Some(context_menu) = terminal.context_menu.as_mut() {
+                                        context_menu.position = None;
+                                    }
+                                }
                                 _ => {
                                     terminal.context_menu = None;
                                 }
@@ -3093,6 +3122,20 @@ impl Application for App {
                     cosmic::app::Action::Surface(a),
                 ));
             }
+            Message::ReorderTab(
+                pane,
+                ReorderEvent {
+                    dragged,
+                    target,
+                    position,
+                },
+            ) => {
+                let Some(p) = self.pane_model.panes.get_mut(pane) else {
+                    log::error!("Failed to find reordered tab model.");
+                    return Task::none();
+                };
+                _ = p.reorder(dragged, target, position);
+            }
         }
 
         Task::none()
@@ -3198,6 +3241,9 @@ impl Application for App {
                 tab_column = tab_column.push(
                     widget::container(
                         widget::tab_bar::horizontal(tab_model)
+                            .enable_tab_drag(String::from("x-cosmic-term/tab"))
+                            .on_reorder(move |event| Message::ReorderTab(pane, event))
+                            .tab_drag_threshold(25.)
                             .button_height(32)
                             .button_spacing(space_xxs)
                             .on_activate(Message::TabActivate)
