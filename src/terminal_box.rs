@@ -543,7 +543,7 @@ where
                     fn fill<Renderer: renderer::Renderer>(
                         &mut self,
                         renderer: &mut Renderer,
-                        is_focused: bool,
+                        _is_focused: bool,
                     ) {
                         let cosmic_text_to_iced_color = |color: cosmic_text::Color| {
                             Color::from_rgba(
@@ -557,7 +557,7 @@ where
                         macro_rules! mk_pos_offset {
                             ($x_offset:expr, $bottom_offset:expr) => {
                                 Vector::new(
-                                    self.start_x + $x_offset,
+                                    (self.start_x + $x_offset).floor(),
                                     self.line_top + self.line_height - $bottom_offset,
                                 )
                             };
@@ -574,7 +574,11 @@ where
                                 }
                             };
                             ($pos_offset:expr, $style_line_height:expr) => {
-                                mk_quad!($pos_offset, $style_line_height, self.end_x - self.start_x)
+                                mk_quad!(
+                                    $pos_offset,
+                                    $style_line_height,
+                                    (self.end_x - self.start_x).ceil()
+                                )
                             };
                         }
 
@@ -1610,6 +1614,10 @@ where
                 }
             }
             _ => (),
+        }
+
+        if terminal.needs_update {
+            shell.request_redraw();
         }
     }
 }
